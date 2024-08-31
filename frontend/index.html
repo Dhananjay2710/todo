@@ -2,21 +2,163 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Todo Application</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>To-Do Application</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .todo-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        .todo-container input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        .todo-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .todo-container button:hover {
+            background-color: #218838;
+        }
+
+        .todo-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+
+        .todo-list li {
+            background-color: #f8f9fa;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 3px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .todo-list li button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+
+        .todo-list li button:hover {
+            background-color: #c82333;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Todo List</h1>
-        <form id="todo-form">
-            <input type="text" id="todo-input" placeholder="Enter a new todo" required>
-            <button type="submit">Add Todo</button>
-        </form>
-        <ul id="todo-list"></ul>
+
+    <h1>To-Do List</h1>
+    <div class="todo-container">
+        <input type="text" id="todo-input" placeholder="Enter a new task">
+        <button onclick="addTodo()">Add Task</button>
+
+        <ul id="todo-list" class="todo-list"></ul>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        const todoList = document.getElementById('todo-list');
+        const todoInput = document.getElementById('todo-input');
+
+        function addTodo() {
+            const task = todoInput.value;
+            if (task === "") return;
+
+            // Create list item
+            const li = document.createElement('li');
+            li.textContent = task;
+
+            // Create delete button
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.onclick = () => {
+                li.remove();
+                saveTodos();
+            };
+
+            li.appendChild(deleteBtn);
+            todoList.appendChild(li);
+
+            // Save the to-do list
+            saveTodos();
+
+            // Clear the input
+            todoInput.value = '';
+        }
+
+        function saveTodos() {
+            const todos = [];
+            todoList.querySelectorAll('li').forEach(li => {
+                todos.push(li.firstChild.textContent);
+            });
+
+            fetch('/save_todos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({todos: todos})
+            });
+        }
+
+        // Fetch and display the existing to-dos
+        function loadTodos() {
+            fetch('/get_todos')
+            .then(response => response.json())
+            .then(data => {
+                data.todos.forEach(task => {
+                    const li = document.createElement('li');
+                    li.textContent = task;
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.onclick = () => {
+                        li.remove();
+                        saveTodos();
+                    };
+
+                    li.appendChild(deleteBtn);
+                    todoList.appendChild(li);
+                });
+            });
+        }
+
+        // Load todos when the page loads
+        window.onload = loadTodos;
+    </script>
+
 </body>
 </html>
